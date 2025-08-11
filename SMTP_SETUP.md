@@ -95,10 +95,14 @@ Mail::raw('Test email', function ($message) {
 
 ## Troubleshooting
 
+### Error "Route [dashboard] not defined"
+✅ **SUDAH DIPERBAIKI**: Semua controller auth sekarang redirect ke route `home` bukan `dashboard`.
+
 ### Email tidak terkirim
 - Pastikan konfigurasi SMTP sudah benar
 - Check Laravel log di `storage/logs/laravel.log`
 - Pastikan port 587 tidak diblokir firewall
+- Jalankan `php artisan config:clear` setelah update .env
 
 ### Gmail blocked
 - Aktifkan "Less secure app access" (tidak direkomendasikan)
@@ -106,3 +110,22 @@ Mail::raw('Test email', function ($message) {
 
 ### Development Environment
 Untuk development, gunakan `MAIL_MAILER=log` untuk melihat email di log file, atau gunakan Mailtrap untuk testing.
+
+## Perubahan yang Telah Dilakukan
+
+### 1. Fixed Controllers (Perbaikan Bug)
+- `VerifyEmailController.php` - redirect ke `home`
+- `EmailVerificationPromptController.php` - redirect ke `home`
+- `EmailVerificationNotificationController.php` - redirect ke `home`
+- `ConfirmablePasswordController.php` - redirect ke `home`
+
+### 2. User Model
+- Implements `MustVerifyEmail` interface
+- Custom email notification dalam bahasa Indonesia
+
+### 3. Views
+- `verify-email.blade.php` - Diterjemahkan ke bahasa Indonesia
+- `home.blade.php` - Ditambahkan notifikasi sukses verifikasi email
+
+### 4. Custom Notification
+- `CustomVerifyEmail.php` - Email verifikasi dalam bahasa Indonesia dengan template yang lebih baik
