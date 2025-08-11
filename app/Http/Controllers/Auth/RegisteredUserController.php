@@ -51,7 +51,9 @@ class RegisteredUserController extends Controller
             Auth::login($user);
 
             DB::commit();
-            return redirect(route('home', absolute: false));
+            
+            // Redirect to email verification notice
+            return redirect(route('verification.notice'));
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Registration failed. Please try again.']);
