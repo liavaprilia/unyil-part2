@@ -51,14 +51,21 @@
                                 </path>
                             </svg>
                         </div>
-                        <div class="form-group">
-                            <label for="recipient_name"
-                                class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Nama
-                                Penerima</label>
-                            <input type="text" id="recipient_name" name="recipient_name"
-                                placeholder="Nama penerima, contoh: Purna Widodo"
-                                class="w-full px-2 py-1 text-sm transition bg-transparent border-b border-gray-400 focus:outline-none focus:border-black">
-                            <div class="hidden mt-1 text-sm text-red-500 invalid-feedback"></div>
+                        <div class="flex items-center justify-between">
+                            <div class="form-group flex-1">
+                                <label for="recipient_name"
+                                    class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Nama
+                                    Penerima</label>
+                                <input type="text" id="recipient_name" name="recipient_name"
+                                    placeholder="Nama penerima, contoh: Purna Widodo"
+                                    value="{{ old('recipient_name', ($user->shipping_recipient_name ?? '')) }}"
+                                    class="w-full px-2 py-1 text-sm transition bg-transparent border-b border-gray-400 focus:outline-none focus:border-black">
+                                <div class="hidden mt-1 text-sm text-red-500 invalid-feedback"></div>
+                            </div>
+                            <label class="ml-4 inline-flex items-center gap-2 text-sm select-none">
+                                <input type="checkbox" class="accent-black" name="save_address" id="save_address" value="1" {{ ($user->shipping_recipient_name ?? false) ? 'checked' : 'checked' }}>
+                                <span>Simpan alamat ini untuk pengiriman selanjutnya</span>
+                            </label>
                         </div>
                         <div class="form-group">
                             <label for="phone"
@@ -66,6 +73,7 @@
                                 Telepon</label>
                             <input type="tel" id="phone" name="phone"
                                 placeholder="Masukkan nomor telepon, contoh: 08123456789 | +628123456789"
+                                value="{{ old('phone', ($user->shipping_phone ?? '')) }}"
                                 class="w-full px-2 py-1 text-sm transition bg-transparent border-b border-gray-400 focus:outline-none focus:border-black">
                             <div class="hidden mt-1 text-sm text-red-500 invalid-feedback"></div>
                         </div>
@@ -74,7 +82,7 @@
                                 class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Alamat</label>
                             <textarea id="address" name="address" rows="2"
                                 placeholder="Masukkan alamat lengkap, contoh: Jl. Raya No. 123, RT 01/RW 02, Kelurahan Sukamaju"
-                                class="w-full px-2 py-1 text-sm transition bg-transparent border-b border-gray-400 resize-none focus:outline-none focus:border-black"></textarea>
+                                class="w-full px-2 py-1 text-sm transition bg-transparent border-b border-gray-400 resize-none focus:outline-none focus:border-black">{{ old('address', ($user->shipping_address ?? '')) }}</textarea>
                             <div class="hidden mt-1 text-sm text-red-500 invalid-feedback"></div>
                         </div>
                         <div class="flex gap-3">
@@ -84,13 +92,14 @@
                                     Pos</label>
                                 <input type="text" id="postal_code" name="postal_code"
                                     placeholder="Masukkan kode pos, contoh: 57462"
+                                    value="{{ old('postal_code', ($user->shipping_postal_code ?? '')) }}"
                                     class="w-full px-2 py-1 text-sm transition bg-transparent border-b border-gray-400 focus:outline-none focus:border-black">
                                 <div class="hidden mt-1 text-sm text-red-500 invalid-feedback"></div>
                             </div>
                             <div class="flex-1 form-group">
                                 <label for="province"
                                     class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Provinsi</label>
-                                <select id="province" name="province" class="w-full select2">
+                                <select id="province" name="province" class="w-full select2" data-saved="{{ $user->shipping_province ?? '' }}">
                                     <option value="" disabled selected>Pilih Provinsi</option>
                                 </select>
                                 <div class="hidden mt-1 text-sm text-red-500 invalid-feedback"></div>
@@ -109,7 +118,7 @@
                             <div class="flex-1 form-group">
                                 <label for="city"
                                     class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Kota</label>
-                                <select id="city" name="city" class="w-full select2">
+                                <select id="city" name="city" class="w-full select2" data-saved-text="{{ $user->shipping_city ?? '' }}">
                                     <option value="" disabled selected>Pilih Kota</option>
                                     <!-- Kota akan diisi via JS -->
                                 </select>
@@ -119,7 +128,7 @@
                             <div class="flex-1 form-group">
                                 <label for="district"
                                     class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Kecamatan</label>
-                                <select id="district" name="district" class="w-full select2">
+                                <select id="district" name="district" class="w-full select2" data-saved-text="{{ $user->shipping_district ?? '' }}">
                                     <option value="" disabled selected>Pilih Kecamatan
                                     </option>
                                     <!-- Kecamatan akan diisi via JS -->
@@ -129,7 +138,7 @@
                             <div class="flex-1 form-group">
                                 <label for="sub_district"
                                     class="block mb-1 text-xs font-semibold tracking-wider text-gray-700 uppercase">Kelurahan</label>
-                                <select id="sub_district" name="sub_district" class="w-full select2">
+                                <select id="sub_district" name="sub_district" class="w-full select2" data-saved-text="{{ $user->shipping_subdistrict ?? '' }}">
                                     <option value="" disabled selected>Pilih Kelurahan
                                     </option>
                                     <!-- Kecamatan akan diisi via JS -->
@@ -949,7 +958,19 @@
                             $option.setAttribute('data-code', item.code);
                             $('#city').append($option);
                         });
-                        $('#city').trigger('change');
+                        // Auto-select saved city by matching text
+                        const savedCityText = $('#city').data('saved-text');
+                        if (savedCityText) {
+                            const match = $('#city option').filter(function(){ return $(this).text() === savedCityText; }).val();
+                            if (match) {
+                                $('#city').val(match).trigger('change.select2');
+                                $('#city').trigger({ type: 'select2:select', params: { data: { id: match } } });
+                            } else {
+                                $('#city').trigger('change');
+                            }
+                        } else {
+                            $('#city').trigger('change');
+                        }
                     },
                     complete: function() {
                         $(`#city, #district, #sub_district`).prop('disabled', false).trigger(
@@ -985,6 +1006,11 @@
                         $option.setAttribute('data-code', item.code);
                         $province.append($option);
                     });
+                    // Auto-select saved province if available
+                    const savedProv = $province.data('saved');
+                    if (savedProv) {
+                        $province.val(savedProv).trigger('change');
+                    }
                     // Enable address fields after province data loaded
                     $('#address-fields-wrapper').removeClass('address-disabled');
                     $('#address-disabled-overlay').remove();
@@ -1187,7 +1213,13 @@
                             $option.setAttribute('data-code', opt.code);
                             $('#district').append($option);
                         });
-                        $('#district').val(null).trigger('change');
+                        const savedDistrict = $('#district').data('saved-text');
+                        if (savedDistrict) {
+                            $('#district').val(savedDistrict).trigger('change.select2');
+                            $('#district').trigger({ type: 'select2:select', params: { data: { id: savedDistrict } } });
+                        } else {
+                            $('#district').val(null).trigger('change');
+                        }
                     },
                     error: function(xhr, status, error) {
                         $('#district').find('option[value="memuat"]').remove();
@@ -1252,7 +1284,12 @@
                             $('#sub_district').append($option);
                         });
                         $('#sub_district').find('option[value="memuat"]').remove();
-                        $('#sub_district').val(null).trigger('change');
+                        const savedVillage = $('#sub_district').data('saved-text');
+                        if (savedVillage) {
+                            $('#sub_district').val(savedVillage).trigger('change.select2');
+                        } else {
+                            $('#sub_district').val(null).trigger('change');
+                        }
                     },
                     complete: function() {
                         $('#sub_district').prop('disabled', false).trigger(

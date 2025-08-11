@@ -23,6 +23,15 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        // default shipping profile fields
+        'shipping_recipient_name',
+        'shipping_phone',
+        'shipping_address',
+        'shipping_postal_code',
+        'shipping_province',
+        'shipping_city',
+        'shipping_district',
+        'shipping_subdistrict',
     ];
 
     /**

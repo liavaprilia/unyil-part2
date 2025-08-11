@@ -29,10 +29,11 @@ class PaymentController extends Controller
             return redirect()->route('home')->with('error', 'Keranjang belanja Anda kosong.');
         }
         $data = [
-            'cartItems' => $cartItems,
+'cartItems' => $cartItems,
             'totalWeight' => $totalWeight,
             'subTotal' => $subTotal,
             'totalDiscount' => $totalDiscount,
+            'user' => auth()->user(),
         ];
         return view('checkout', $data);
     }
@@ -170,6 +171,22 @@ class PaymentController extends Controller
                 'total_price' => $validatedData['total_price'],
                 'total_quantity' => $cart->sum('cart_qty'),
             ]);
+
+            // Save/update default shipping profile if requested
+            if ($request->boolean('save_address')) {
+                $user = auth()->user();
+                $user->fill([
+                    'shipping_recipient_name' => $request->recipient_name,
+                    'shipping_phone' => $request->phone,
+                    'shipping_address' => $request->address,
+                    'shipping_postal_code' => $request->postal_code,
+                    'shipping_province' => $request->province,
+                    'shipping_city' => is_string($request->city) ? $request->city : (string)$request->city,
+                    'shipping_district' => $request->district,
+                    'shipping_subdistrict' => $request->sub_district,
+                ]);
+                $user->save();
+            }
 
             // Create transaction details
             foreach ($validatedData['cart_items'] as $item) {
