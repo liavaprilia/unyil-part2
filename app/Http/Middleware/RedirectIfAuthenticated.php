@@ -19,8 +19,13 @@ class RedirectIfAuthenticated
         $user = auth()->user();
 
         if ($user) {
+            // Check if email is verified
+            if (!$user->hasVerifiedEmail()) {
+                return redirect(route('verification.notice'));
+            }
+            
             if ($user->hasRole('Admin')) {
-                return redirect()->intended(route('home', absolute: false));
+                return redirect()->intended(route('admin.dashboard', absolute: false));
             } else {
                 return redirect()->intended(route('home', absolute: false));
             }

@@ -48,12 +48,13 @@ class RegisteredUserController extends Controller
 
             event(new Registered($user));
 
-            Auth::login($user);
+            // Don't auto-login, user must verify email first
+            // Auth::login($user);
 
             DB::commit();
             
-            // Redirect to email verification notice
-            return redirect(route('verification.notice'));
+            // Redirect to login with success message
+            return redirect(route('login'))->with('status', 'Registrasi berhasil! Silakan cek email Anda untuk verifikasi akun.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->withErrors(['error' => 'Registration failed. Please try again.']);
