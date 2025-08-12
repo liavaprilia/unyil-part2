@@ -23,7 +23,7 @@
                         <span
                             class="text-lg text-gray-400 line-through">Rp. {{ number_format($product->product_price, 0, ',', '.') }}</span>
                         <span
-                            class="text-sm font-semibold text-[#fb8763] bg-red-100 px-1 py-0.5 rounded">-{{ round(($product->product_discount / $product->product_price) * 100, 2) }}%</span>
+                            class="text-sm font-semibold text-[#fb8763] bg-red-100 px-1 py-0.5 rounded">{{ round(($product->product_discount / $product->product_price) * 100, 2) }}%</span>
                     </div>
                 @else
                     <h2
